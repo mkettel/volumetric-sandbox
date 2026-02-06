@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useParticleStore, type ZMode } from "@/store/particle-store";
 import { encodeImageToParticles } from "@/lib/encoders/particle-encoder";
+import { estimateDepth } from "@/lib/encoders/depth-encoder";
 
 function Separator() {
   return <div className="h-px bg-zinc-800" />;
@@ -16,10 +17,12 @@ const Z_MODES: { id: ZMode; label: string }[] = [
   { id: "luminance", label: "Luminance" },
   { id: "hue", label: "Hue" },
   { id: "saturation", label: "Saturation" },
+  { id: "depth", label: "Depth" },
 ];
 
 export function ParticleControlPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -30,15 +33,28 @@ export function ParticleControlPanel() {
   const zScale = useParticleStore((s) => s.zScale);
   const explode = useParticleStore((s) => s.explode);
   const particleData = useParticleStore((s) => s.particleData);
+  const depthStatus = useParticleStore((s) => s.depthStatus);
 
   const handleImageFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) return;
 
+    fileRef.current = file;
     setLoading(true);
     try {
       const { image, data } = await encodeImageToParticles(file);
       useParticleStore.getState().setSourceImage(image);
       useParticleStore.getState().setParticleData(data);
+
+      // Start depth estimation in background
+      useParticleStore.getState().setDepthStatus("loading");
+      estimateDepth(file, data.imageWidth, data.imageHeight)
+        .then((depthMap) => {
+          useParticleStore.getState().setDepthMap(depthMap);
+        })
+        .catch((err) => {
+          console.error("Depth estimation failed:", err);
+          useParticleStore.getState().setDepthStatus("error");
+        });
     } finally {
       setLoading(false);
     }
@@ -71,6 +87,12 @@ export function ParticleControlPanel() {
   const handleDragLeave = useCallback(() => {
     setDragOver(false);
   }, []);
+
+  const getDepthLabel = () => {
+    if (depthStatus === "loading") return "Depth...";
+    if (depthStatus === "error") return "Depth (!)";
+    return "Depth";
+  };
 
   return (
     <div className="space-y-4">
@@ -133,10 +155,20 @@ export function ParticleControlPanel() {
                       : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"
                   }`}
                 >
-                  {mode.label}
+                  {mode.id === "depth" ? getDepthLabel() : mode.label}
                 </button>
               ))}
             </div>
+            {depthStatus === "loading" && (
+              <p className="text-[10px] text-zinc-500">
+                Estimating depth (first run downloads ~25MB model)...
+              </p>
+            )}
+            {depthStatus === "error" && (
+              <p className="text-[10px] text-red-400">
+                Depth estimation failed
+              </p>
+            )}
           </div>
 
           <Separator />

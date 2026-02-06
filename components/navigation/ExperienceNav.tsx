@@ -1,6 +1,6 @@
 "use client";
 
-type Experience = "volume" | "rgb-peeling" | "image-particles";
+type Experience = "volume" | "rgb-peeling" | "image-particles" | "audio-spectrogram" | "depth-sculpture";
 
 interface ExperienceNavProps {
   active: Experience;
@@ -11,6 +11,8 @@ const tabs: { id: Experience; label: string }[] = [
   { id: "volume", label: "Volume Explorer" },
   { id: "rgb-peeling", label: "RGB Peeling" },
   { id: "image-particles", label: "Image Particles" },
+  { id: "audio-spectrogram", label: "Audio Spectrogram" },
+  { id: "depth-sculpture", label: "Depth Sculpture" },
 ];
 
 export function ExperienceNav({ active, onChange }: ExperienceNavProps) {

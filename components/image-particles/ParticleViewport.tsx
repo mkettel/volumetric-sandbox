@@ -4,16 +4,31 @@ import { useRef, useEffect, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import { useParticleStore, type ZMode } from "@/store/particle-store";
+import {
+  useParticleStore,
+  type ZMode,
+  type ParticleData,
+} from "@/store/particle-store";
 import { particleVertexShader } from "@/lib/shaders/particle.vert";
 import { particleFragmentShader } from "@/lib/shaders/particle.frag";
+
+function getZMapForMode(
+  mode: ZMode,
+  data: ParticleData,
+  depthMap: Float32Array | null
+): Float32Array {
+  if (mode === "depth") {
+    return depthMap ?? data.zMaps.flat;
+  }
+  return data.zMaps[mode];
+}
 
 function ParticleCloud() {
   const geometryRef = useRef<THREE.BufferGeometry>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const prevModeRef = useRef<ZMode>("luminance");
   const transitionRef = useRef(1.0);
   const zTargetAttrRef = useRef<THREE.BufferAttribute | null>(null);
+  const prevTargetRef = useRef<Float32Array | null>(null);
 
   const particleData = useParticleStore((s) => s.particleData);
 
@@ -32,13 +47,13 @@ function ParticleCloud() {
   useEffect(() => {
     if (!particleData || !geometryRef.current) return;
     const geo = geometryRef.current;
-    const { positions, colors, zMaps, count } = particleData;
+    const { positions, colors, count } = particleData;
 
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geo.setAttribute("a_color", new THREE.BufferAttribute(colors, 3));
 
-    const zMode = useParticleStore.getState().zMode;
-    const targetZ = zMaps[zMode];
+    const state = useParticleStore.getState();
+    const targetZ = getZMapForMode(state.zMode, particleData, state.depthMap);
 
     // Current Z: own copy we can mutate for transitions
     const currentZ = new Float32Array(count);
@@ -53,7 +68,7 @@ function ParticleCloud() {
     zTargetAttrRef.current = targetAttr;
 
     geo.setDrawRange(0, count);
-    prevModeRef.current = zMode;
+    prevTargetRef.current = targetZ;
     transitionRef.current = 1.0;
   }, [particleData]);
 
@@ -70,28 +85,39 @@ function ParticleCloud() {
     mat.uniforms.u_explode.value = state.explode;
     mat.uniforms.u_opacity.value = state.opacity;
 
-    // Detect Z-mode change
-    if (state.zMode !== prevModeRef.current) {
-      // Copy current interpolated positions → a_zCurrent
-      const currentAttr = geo.getAttribute("a_zCurrent") as THREE.BufferAttribute;
+    // Only enable depth write in depth mode (other modes have particles
+    // at similar z-values which causes z-fighting artifacts)
+    mat.depthWrite = state.zMode === "depth" && state.depthMap !== null;
+
+    // Resolve the current target z-map (handles depth mode + depthMap arrival)
+    const currentTarget = getZMapForMode(
+      state.zMode,
+      particleData,
+      state.depthMap
+    );
+
+    // Detect target change (mode switch OR depthMap arriving while in depth mode)
+    if (currentTarget !== prevTargetRef.current) {
+      const currentAttr = geo.getAttribute(
+        "a_zCurrent"
+      ) as THREE.BufferAttribute;
       const targetAttr = zTargetAttrRef.current;
       if (currentAttr && targetAttr) {
         const currentArr = currentAttr.array as Float32Array;
         const targetArr = targetAttr.array as Float32Array;
         const t = transitionRef.current;
-        // Bake the interpolated value into current
+        // Bake the interpolated value into a_zCurrent
         for (let i = 0; i < currentArr.length; i++) {
           currentArr[i] = currentArr[i] + (targetArr[i] - currentArr[i]) * t;
         }
         currentAttr.needsUpdate = true;
 
-        // Update target array in-place with new mode's values
-        const newTarget = particleData.zMaps[state.zMode];
-        targetArr.set(newTarget);
+        // Update target array in-place with new values
+        targetArr.set(currentTarget);
         targetAttr.needsUpdate = true;
       }
 
-      prevModeRef.current = state.zMode;
+      prevTargetRef.current = currentTarget;
       transitionRef.current = 0;
     }
 

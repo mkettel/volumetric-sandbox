@@ -1,4 +1,4 @@
-import type { ParticleData, ZMode } from "@/store/particle-store";
+import type { ParticleData, BaseZMode } from "@/store/particle-store";
 
 const MAX_PARTICLES = 500_000;
 
@@ -84,7 +84,7 @@ export async function encodeImageToParticles(file: File): Promise<{
     }
   }
 
-  const zMaps: Record<ZMode, Float32Array> = {
+  const zMaps: Record<BaseZMode, Float32Array> = {
     flat: zFlat,
     luminance: zLuminance,
     hue: zHue,
