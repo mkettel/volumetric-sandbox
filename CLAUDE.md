@@ -53,7 +53,7 @@ Two fundamentally different UX modes:
    - Each frame becomes a Z-slice, scrub through time as depth
    - Motion creates ghostly 3D trails, static regions stay sharp
 
-2. **RGB Channel Peeling** — the gateway drug
+2. **RGB Channel Peeling** ✅ DONE — the gateway drug
    - Encoder skeleton already exists (`lib/encoders/rgb-encoder.ts`)
    - **Rendering options:**
      - **Geometry approach (primary):** Three actual displaced meshes with image UV-mapped, additive blending. Users grab and drag planes apart, rotate independently. Spring physics on recombination — they snap back with bounce. More tactile than volumetric.
@@ -90,7 +90,7 @@ Two fundamentally different UX modes:
 
 ### Tier 2: High Novelty, More Effort
 
-5. **Audio → Sculpted Matter** — most visceral
+5. **Audio → Sculpted Matter** ✅ DONE (particle approach) — most visceral
    - **Rendering options:**
      - **Volume approach:** FFT → frequency bins (Y), time slices → Z, amplitude → density. Playhead as moving slice plane synced to audio playback — users see what they hear at the moment of the cut. Static, inspectable.
      - **Particle approach (potentially stronger):** Spawn particles in real-time from frequency data. Bass emits heavy, slow particles that cluster low. Treble emits fast, light ones that scatter. Amplitude = emission rate. Music *generates* a living structure that self-organizes and decays. GPU instanced points.
@@ -100,7 +100,7 @@ Two fundamentally different UX modes:
    - **Stereo as spatial anatomy:** Left/right channels as separate spatial regions. Panning = spatial asymmetry.
    - **Beat detection → structural landmarks:** Transients create sharp density spikes across all bands — cross-sectional "walls." Rhythm becomes architecture.
 
-6. **Photo → Depth Sculpture** — instant payoff
+6. **Photo → Depth Sculpture** ✅ DONE (point cloud + mesh displacement) — instant payoff
    - Monocular depth estimation (MiDaS, Depth Anything) on a single photo
    - **Rendering options:**
      - **Volume approach:** Use depth map to distribute density along Z. Near objects dense at small Z, far at large Z. Slice plane peels through depth like peeling through anatomy.

@@ -10,11 +10,13 @@ import { RGBPeelingLayout } from "@/components/rgb-peeling/RGBPeelingLayout";
 import { ParticleLayout } from "@/components/image-particles/ParticleLayout";
 import { AudioLayout } from "@/components/audio-particles/AudioLayout";
 import { DepthLayout } from "@/components/depth-sculpture/DepthLayout";
+import { LayersLayout } from "@/components/photo-layers/LayersLayout";
+import { ReliefLayout } from "@/components/bas-relief/ReliefLayout";
 import { useVolumeLoader } from "@/hooks/use-volume-loader";
 import { usePlayback } from "@/hooks/use-playback";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
-type Experience = "volume" | "rgb-peeling" | "image-particles" | "audio-spectrogram" | "depth-sculpture";
+type Experience = "volume" | "rgb-peeling" | "image-particles" | "audio-spectrogram" | "depth-sculpture" | "photo-layers" | "bas-relief";
 
 function VolumeExplorer() {
   const { loadVolume } = useVolumeLoader();
@@ -47,6 +49,8 @@ export default function Home() {
           {active === "image-particles" && <ParticleLayout />}
           {active === "audio-spectrogram" && <AudioLayout />}
           {active === "depth-sculpture" && <DepthLayout />}
+          {active === "photo-layers" && <LayersLayout />}
+          {active === "bas-relief" && <ReliefLayout />}
         </div>
       </div>
     </WebGL2Check>
