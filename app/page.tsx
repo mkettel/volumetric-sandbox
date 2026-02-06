@@ -7,11 +7,12 @@ import { LoadingOverlay } from "@/components/playground/LoadingOverlay";
 import { ControlPanel } from "@/components/controls/ControlPanel";
 import { WebGL2Check } from "@/components/viewport/WebGL2Check";
 import { RGBPeelingLayout } from "@/components/rgb-peeling/RGBPeelingLayout";
+import { ParticleLayout } from "@/components/image-particles/ParticleLayout";
 import { useVolumeLoader } from "@/hooks/use-volume-loader";
 import { usePlayback } from "@/hooks/use-playback";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
-type Experience = "volume" | "rgb-peeling";
+type Experience = "volume" | "rgb-peeling" | "image-particles";
 
 function VolumeExplorer() {
   const { loadVolume } = useVolumeLoader();
@@ -41,6 +42,7 @@ export default function Home() {
         <div className="flex-1 overflow-hidden">
           {active === "volume" && <VolumeExplorer />}
           {active === "rgb-peeling" && <RGBPeelingLayout />}
+          {active === "image-particles" && <ParticleLayout />}
         </div>
       </div>
     </WebGL2Check>

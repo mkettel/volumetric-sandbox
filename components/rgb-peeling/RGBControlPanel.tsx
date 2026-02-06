@@ -20,6 +20,7 @@ export function RGBControlPanel() {
   const separation = useRGBStore((s) => s.separation);
   const opacity = useRGBStore((s) => s.opacity);
   const visibility = useRGBStore((s) => s.channelVisibility);
+  const channelWindows = useRGBStore((s) => s.channelWindows);
   const isAnimating = useRGBStore((s) => s.isAnimating);
 
   const handleImageFile = useCallback(async (file: File) => {
@@ -203,6 +204,65 @@ export function RGBControlPanel() {
                 );
               })}
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Per-Channel Windowing */}
+          <div className="space-y-3">
+            <Label>Channel Windowing</Label>
+            {(["r", "g", "b"] as const).map((ch) => {
+              const labels = { r: "Red", g: "Green", b: "Blue" };
+              const accentColors = {
+                r: "text-red-400",
+                g: "text-green-400",
+                b: "text-blue-400",
+              };
+              const win = channelWindows[ch];
+              return (
+                <div key={ch} className="space-y-2">
+                  <span className={`text-[10px] font-medium ${accentColors[ch]}`}>
+                    {labels[ch]}
+                  </span>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-500">Center</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        {win.center.toFixed(2)}
+                      </span>
+                    </div>
+                    <Slider
+                      value={[win.center]}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      onValueChange={([v]) =>
+                        useRGBStore
+                          .getState()
+                          .setChannelWindow(ch, v, win.width)
+                      }
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-500">Width</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        {win.width.toFixed(2)}
+                      </span>
+                    </div>
+                    <Slider
+                      value={[win.width]}
+                      min={0.01}
+                      max={2}
+                      step={0.01}
+                      onValueChange={([v]) =>
+                        useRGBStore
+                          .getState()
+                          .setChannelWindow(ch, win.center, v)
+                      }
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </>
       )}

@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import * as THREE from "three";
 
+export interface ChannelWindow {
+  center: number;
+  width: number;
+}
+
 interface RGBStoreState {
   sourceImage: HTMLImageElement | null;
   imageTexture: THREE.Texture | null;
@@ -14,6 +19,7 @@ interface RGBStoreState {
   isAnimating: boolean;
   opacity: number;
   channelVisibility: { r: boolean; g: boolean; b: boolean };
+  channelWindows: { r: ChannelWindow; g: ChannelWindow; b: ChannelWindow };
 
   setSourceImage: (image: HTMLImageElement | null) => void;
   setTextures: (
@@ -26,6 +32,7 @@ interface RGBStoreState {
   setOpacity: (opacity: number) => void;
   toggleMerge: () => void;
   setChannelVisibility: (channel: "r" | "g" | "b", visible: boolean) => void;
+  setChannelWindow: (channel: "r" | "g" | "b", center: number, width: number) => void;
   reset: () => void;
 }
 
@@ -38,6 +45,11 @@ export const useRGBStore = create<RGBStoreState>((set, get) => ({
   isAnimating: false,
   opacity: 0.85,
   channelVisibility: { r: true, g: true, b: true },
+  channelWindows: {
+    r: { center: 0.5, width: 1.0 },
+    g: { center: 0.5, width: 1.0 },
+    b: { center: 0.5, width: 1.0 },
+  },
 
   setSourceImage: (sourceImage) => set({ sourceImage }),
 
@@ -69,6 +81,14 @@ export const useRGBStore = create<RGBStoreState>((set, get) => ({
       channelVisibility: { ...state.channelVisibility, [channel]: visible },
     })),
 
+  setChannelWindow: (channel, center, width) =>
+    set((state) => ({
+      channelWindows: {
+        ...state.channelWindows,
+        [channel]: { center, width },
+      },
+    })),
+
   reset: () => {
     const state = get();
     state.imageTexture?.dispose();
@@ -86,6 +106,11 @@ export const useRGBStore = create<RGBStoreState>((set, get) => ({
       isAnimating: false,
       opacity: 0.85,
       channelVisibility: { r: true, g: true, b: true },
+      channelWindows: {
+        r: { center: 0.5, width: 1.0 },
+        g: { center: 0.5, width: 1.0 },
+        b: { center: 0.5, width: 1.0 },
+      },
     });
   },
 }));
